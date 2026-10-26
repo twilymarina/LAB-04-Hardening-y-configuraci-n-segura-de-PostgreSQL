@@ -1,3 +1,24 @@
+Preguntas de las actividades
+A1. ¿Por qué conocer la superficie de ataque debe preceder al hardening? Porque no se puede proteger ni reducir lo que no se conoce. Primero hay que saber qué puertos, interfaces, cuentas, reglas y servicios existen para decidir cuáles son necesarios y cuáles se restringen o eliminan.
+A2. ¿Por qué es importante conocer la ubicación física de estos archivos? Porque cada tipo de archivo (datos, configuración, autenticación, logs) tiene un riesgo distinto y requiere permisos propios. Si no sé dónde están, no puedo revisar sus permisos, respaldarlos ni auditar los cambios.
+A3. Comparación de arquitecturas. La segunda arquitectura reduce mejor la exposición: el servidor queda dentro de una red privada, detrás del firewall, y no es alcanzable directamente desde Internet. En la primera, el puerto 5432 queda expuesto y cualquier atacante puede intentar conectarse. Menos puntos de entrada significa menos cosas que proteger.
+A5. Análisis de host all all 0.0.0.0/0 scram-sha-256
+• Bases de datos: todas.
+• Usuarios: todos.
+• Origen: cualquier dirección IPv4.
+• Autenticación: scram-sha-256.
+• Por qué es exposición innecesaria: cualquier equipo puede intentar autenticarse con cualquier usuario contra cualquier base. La contraseña es la única barrera.
+• Qué necesito para restringirla: qué aplicaciones o personas se conectan, desde qué IP o red, a qué base y con qué usuario.
+A7. Autenticación
+• Autenticación vs. autorización: la primera verifica quién eres; la segunda define qué puedes hacer.
+• Qué protege scram-sha-256: protege la contraseña durante la autenticación y su almacenamiento, sin enviarla ni guardarla en claro, y resiste mejor ataques que md5.
+• Por qué no es cifrado reversible: lo que se almacena es un verificador derivado de la contraseña, del que no se puede recuperar la contraseña original. El cifrado es reversible con una clave.
+• Cuenta con permisos excesivos y contraseña fuerte: sigue siendo un riesgo. Si se compromete la aplicación o se filtra la credencial, el atacante hereda todos los permisos.
+A8. ¿Por qué no usar SUPERUSER como cuenta de una aplicación? Porque un compromiso de la aplicación (por ejemplo, inyección SQL) daría al atacante control total: leer y borrar cualquier dato, crear roles y omitir permisos. Una cuenta con mínimo privilegio limita el daño.
+A9. ¿Qué riesgo hay si la aplicación usa una cuenta administrativa? Que cualquier vulnerabilidad de la aplicación se convierte en control administrativo de la base de datos, rompiendo el principio de mínimo privilegio.
+A11. ¿Por qué es un problema mantener conexiones abiertas indefinidamente? Cada conexión consume memoria y ocupa un lugar de max_connections. Si se acumulan conexiones inactivas o transacciones abiertas, se agotan recursos, se bloquean limpiezas y nuevos usuarios legítimos no pueden conectarse (problema de disponibilidad).
+A12. ¿Por qué no basta con GRANT y REVOKE? Porque esos controles actúan dentro de PostgreSQL. Si un usuario del sistema operativo puede leer pg_hba.conf, certificados o los archivos del directorio de datos, puede obtener información o eludir los controles sin pasar por PostgreSQL.
+A14. ¿Por qué pg_hba.conf y el firewall no son equivalentes? El firewall filtra tráfico de red por origen, destino y puerto antes de llegar al servicio. pg_hba.conf decide dentro de PostgreSQL si una conexión puede autenticarse según base, usuario, origen y método. Son capas complementarias.
 Informe (10 preguntas)
 1. Principal superficie de ataque: el puerto 5432 accesible desde redes amplias, con escucha en todas las interfaces y reglas permisivas en pg_hba.conf. (Ajusta con lo que encontraste.)
 2. Mayor riesgo: una regla como host all all 0.0.0.0/0, porque permite intentar entrar a cualquier base con cualquier usuario desde cualquier IPv4.
@@ -63,25 +84,3 @@ Sin límites ni timeouts
 Agotamiento de recursos
 max_connections y timeouts
 ¿Es suficiente tener contraseñas fuertes? No. Protegen solo la autenticación. No limitan lo que la cuenta puede hacer (autorización), no reducen quién alcanza el servidor (red), no corrigen parámetros inseguros (configuración), no protegen los archivos (sistema operativo) y no permiten detectar abusos (monitoreo). La seguridad depende de varias capas.
-
-Preguntas de las actividades
-A1. ¿Por qué conocer la superficie de ataque debe preceder al hardening? Porque no se puede proteger ni reducir lo que no se conoce. Primero hay que saber qué puertos, interfaces, cuentas, reglas y servicios existen para decidir cuáles son necesarios y cuáles se restringen o eliminan.
-A2. ¿Por qué es importante conocer la ubicación física de estos archivos? Porque cada tipo de archivo (datos, configuración, autenticación, logs) tiene un riesgo distinto y requiere permisos propios. Si no sé dónde están, no puedo revisar sus permisos, respaldarlos ni auditar los cambios.
-A3. Comparación de arquitecturas. La segunda arquitectura reduce mejor la exposición: el servidor queda dentro de una red privada, detrás del firewall, y no es alcanzable directamente desde Internet. En la primera, el puerto 5432 queda expuesto y cualquier atacante puede intentar conectarse. Menos puntos de entrada significa menos cosas que proteger.
-A5. Análisis de host all all 0.0.0.0/0 scram-sha-256
-• Bases de datos: todas.
-• Usuarios: todos.
-• Origen: cualquier dirección IPv4.
-• Autenticación: scram-sha-256.
-• Por qué es exposición innecesaria: cualquier equipo puede intentar autenticarse con cualquier usuario contra cualquier base. La contraseña es la única barrera.
-• Qué necesito para restringirla: qué aplicaciones o personas se conectan, desde qué IP o red, a qué base y con qué usuario.
-A7. Autenticación
-• Autenticación vs. autorización: la primera verifica quién eres; la segunda define qué puedes hacer.
-• Qué protege scram-sha-256: protege la contraseña durante la autenticación y su almacenamiento, sin enviarla ni guardarla en claro, y resiste mejor ataques que md5.
-• Por qué no es cifrado reversible: lo que se almacena es un verificador derivado de la contraseña, del que no se puede recuperar la contraseña original. El cifrado es reversible con una clave.
-• Cuenta con permisos excesivos y contraseña fuerte: sigue siendo un riesgo. Si se compromete la aplicación o se filtra la credencial, el atacante hereda todos los permisos.
-A8. ¿Por qué no usar SUPERUSER como cuenta de una aplicación? Porque un compromiso de la aplicación (por ejemplo, inyección SQL) daría al atacante control total: leer y borrar cualquier dato, crear roles y omitir permisos. Una cuenta con mínimo privilegio limita el daño.
-A9. ¿Qué riesgo hay si la aplicación usa una cuenta administrativa? Que cualquier vulnerabilidad de la aplicación se convierte en control administrativo de la base de datos, rompiendo el principio de mínimo privilegio.
-A11. ¿Por qué es un problema mantener conexiones abiertas indefinidamente? Cada conexión consume memoria y ocupa un lugar de max_connections. Si se acumulan conexiones inactivas o transacciones abiertas, se agotan recursos, se bloquean limpiezas y nuevos usuarios legítimos no pueden conectarse (problema de disponibilidad).
-A12. ¿Por qué no basta con GRANT y REVOKE? Porque esos controles actúan dentro de PostgreSQL. Si un usuario del sistema operativo puede leer pg_hba.conf, certificados o los archivos del directorio de datos, puede obtener información o eludir los controles sin pasar por PostgreSQL.
-A14. ¿Por qué pg_hba.conf y el firewall no son equivalentes? El firewall filtra tráfico de red por origen, destino y puerto antes de llegar al servicio. pg_hba.conf decide dentro de PostgreSQL si una conexión puede autenticarse según base, usuario, origen y método. Son capas complementarias.
