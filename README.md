@@ -104,8 +104,6 @@ Las capturas correspondientes están en `evidencias/`.
 ## Conclusiones
 Con este laboratorio se redujo la superficie de exposición de PostgreSQL al limitar las interfaces de escucha, las redes y las cuentas con acceso, y se documentó el estado antes y después de los cambios. El hardening no se limita a tener contraseñas fuertes: combina red, autenticación, autorización, configuración, sistema operativo y monitoreo. Como trabajo pendiente queda mantener una política de actualización de PostgreSQL y del sistema operativo, y revisar periódicamente las reglas de `pg_hba.conf`, los roles, las extensiones y los logs de conexión.
 
-## Evidencias
-`evidencias/01-superficie-ataque.png`, `02-listen-addresses.png`, `03-pg-hba.png`, `04-roles.png`, `05-tls.png`, `06-verificacion.png`.
 
 ## Estructura
 ```
